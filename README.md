@@ -16,3 +16,22 @@ A python library for scraping case information from court systems.
 Install with `pip install courtbot`
 
 
+## Adding a court
+
+
+## Run test scripts
+
+- `pytest tests/`
+
+or with ipdb:
+
+    - `pytest -s tests/`
+
+specify a test:
+
+   - `pytest -s tests/test_parse.py -k 'test_events'`
+
+## Deployment steps
+
+1. `python3 setup.py sdist bdist_wheel`
+1. `twine upload dist/*`

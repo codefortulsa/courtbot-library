@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
-setup(name='oscn',
+setup(name='courtbot',
       version='0.0.0.0',
       description='Generic Court Scraper for Courbot system use',
       long_description=long_description,
