@@ -10,4 +10,4 @@ class MakeCase(object):
         return oscn.request.Case(case_id)
 
 
-Case = MakeCase()
+get_case = MakeCase()

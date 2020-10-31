@@ -1,12 +1,12 @@
 import courtbot
 
 
-def test_body_text():
+def test_has_properties():
 
     court = courtbot.get_state("OK")
 
     assert court.courts
 
-    case = court.Case('tulsa-CF-2020-1')
+    case = court.get_case('tulsa-CF-2020-1')
 
     assert case.events
