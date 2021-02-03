@@ -66,9 +66,9 @@ class VermontCourtCalendars(object):
 
         return self._courts
 
-    @classmethod
-    def fetch_lookup_table(cls):
-        with request.urlopen(cls.court_calendar_url) as response:
+    @staticmethod
+    def fetch_lookup_table():
+        with request.urlopen(VermontCourtCalendars.court_calendar_url) as response:
             lookup_table = pandas.read_csv(response)
 
         return lookup_table
