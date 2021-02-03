@@ -29,8 +29,8 @@ class Case(object):
         )
         return date
 
-    @classmethod
-    def format_events(cls, case_info):
+    @staticmethod
+    def format_events(case_info):
         events = [
             dict(
                 date=Case.build_date(event),
