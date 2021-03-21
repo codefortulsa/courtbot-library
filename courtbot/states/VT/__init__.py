@@ -1,6 +1,7 @@
-import pandas
 import json
-import urllib.request as request
+import re
+from bs4 import BeautifulSoup
+from urllib import request as request
 
 
 class Case(object):
@@ -41,49 +42,108 @@ class Case(object):
         return events
 
 
+class Court(object):
+
+    def __init__(self, name, location, case_identifier):
+        self.name = name
+        self.location = location
+        self.case_identifier = case_identifier
+
+    @staticmethod
+    def get_case(case_id):
+        return VermontCourtCalendars.get_case(case_id)
+
+
 class VermontCourtCalendars(object):
-    court_calendar_url = "https://raw.githubusercontent.com/codeforbtv/court-calendars/main/event_lookup.csv"
+    court_calendar_url = "https://github.com/codeforbtv/court-calendars"
+    case_identifier = dict(
+        definition=[
+            "county",
+            "division",
+            "docket"
+        ],
+        example="addison_civil_104-8-20",
+        recipe="{county}_{division}_{docket}"
+    )
 
     def __init__(self):
-        self._lookup_table = None
+        self._court_info = None
         self._courts = None
+        self._supported_locations = None
 
     @property
-    def lookup_table(self):
-        if self._lookup_table is None:
-            self._lookup_table = VermontCourtCalendars.fetch_lookup_table()
-            self._lookup_table["case_id"] = (
-                    self._lookup_table.county + "_" + self._lookup_table.division + "_" + self.lookup_table.docket)
-        return self._lookup_table
+    def court_info(self):
+        if self._court_info is None:
+            all_courts = []
+            with request.urlopen(VermontCourtCalendars.court_calendar_url) as response:
+                soup = BeautifulSoup(response, features="html.parser")
+                for link in soup.findAll('a'):
+                    if re.match(r"/codeforbtv/court-calendars/tree/main/", link.get('href')):
+                        county_div = link.get('href').split("/")[-1]
+                        county = county_div.split("_")[0]
+                        div = county_div.split("_")[1]
+                        all_courts.append(
+                            dict(
+                                county=county,
+                                division=div,
+                                name=county + " " + div + " division"
+                            )
+                        )
+            self._court_info = all_courts
+        return self._court_info
+
+    @property
+    def supported_locations(self):
+        if self._supported_locations is None:
+            self._supported_locations = dict()
+            location_regex = r"(county|city|town|municipality)"
+            for key in set(loc_key for court in self.court_info for loc_key in list(court.keys())):
+                if re.match(location_regex, str(key)):
+                    self._supported_locations[key] = [court.get(key) for court in self.court_info]
+        return self._supported_locations
 
     @property
     def courts(self):
         if self._courts is None:
             self._courts = sorted(
-                [county + "_" + division
-                 for county in set(self.lookup_table.county)
-                 for division in set(self.lookup_table[self.lookup_table.county == county].division)])
-
+                [court.get("name") for court in self.court_info]
+            )
         return self._courts
 
     @staticmethod
-    def fetch_lookup_table():
-        with request.urlopen(VermontCourtCalendars.court_calendar_url) as response:
-            lookup_table = pandas.read_csv(response)
+    def get_case_url(case_id):
+        url_stub = "https://raw.githubusercontent.com/codeforbtv/court-calendars/main"
+        docket = case_id.split("_")[-1]
+        county_div = case_id.split(docket)[0][0:-1]
+        case_url = "/".join([url_stub, county_div, docket + ".json"])
+        return case_url
 
-        return lookup_table
-
-    def get_case_url(self, case_id):
-        url = self.lookup_table.loc[self.lookup_table.case_id == case_id, "link"][0]
-        return url
-
-    def get_case(self, case_id):
-        case_url = self.get_case_url(case_id)
+    @staticmethod
+    def get_case(case_id):
+        case_url = VermontCourtCalendars.get_case_url(case_id)
         with request.urlopen(case_url) as response:
             case_json = response.read()
         return Case(case_json)
 
+    def get_court(self, court_name):
+        court_name = court_name.lower().strip()
+        court_info = None
+        for ci in self.court_info:
+            if ci.get('name') == court_name or ci.get('name')[0:-9] == court_name:
+                court_info = ci
+                break
+
+        if court_info is None:
+            raise KeyError(court_name + " not found.")
+        else:
+            return Court(
+                court_info.get('name'),
+                dict(county=court_info.get('county')),
+                VermontCourtCalendars.case_identifier
+            )
+
 
 vtcc = VermontCourtCalendars()
 courts = vtcc.courts
-get_case = vtcc.get_case
+supported_locations = vtcc.supported_locations
+get_court = vtcc.get_court

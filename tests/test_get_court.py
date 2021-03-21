@@ -11,11 +11,23 @@ def test_has_properties():
 
     assert case.events
 
-    court = courtbot.get_state("VT")
+    state = courtbot.get_state("VT")
 
-    assert court.courts
+    assert state.courts
+
+    assert state.supported_locations
+
+    court = state.get_court("addison civil division")
+    assert court.name == "addison civil division"
+    court = state.get_court("Addison civil")
+    assert court.name == "addison civil division"
+
+    case_identifier = court.case_identifier
+    assert case_identifier["definition"]
+    assert case_identifier["example"]
+    assert case_identifier["recipe"]
 
     # TODO: This particular case_id may not always exist...
-    case = court.get_case('addison_civil_150-6-19')
+    case = court.get_case("addison_civil_104-8-20")
 
     assert case.events
