@@ -14,8 +14,10 @@ def test_has_properties():
     state = courtbot.get_state("VT")
 
     assert state.courts
+    assert state.courts[0] == 'addison civil division'
 
     assert state.supported_locations
+    assert state.supported_locations['county'][0] == 'addison'
 
     court = state.get_court("addison civil division")
     assert court.name == "addison civil division"

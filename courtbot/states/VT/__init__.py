@@ -96,10 +96,10 @@ class VermontCourtCalendars(object):
     def supported_locations(self):
         if self._supported_locations is None:
             self._supported_locations = dict()
-            location_regex = r"(county|city|town|municipality)"
+            location_regex = r"(county)"
             for key in set(loc_key for court in self.court_info for loc_key in list(court.keys())):
                 if re.match(location_regex, str(key)):
-                    self._supported_locations[key] = [court.get(key) for court in self.court_info]
+                    self._supported_locations[key] = sorted(list(set([court.get(key) for court in self.court_info])))
         return self._supported_locations
 
     @property
