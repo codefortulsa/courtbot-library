@@ -29,7 +29,6 @@ def test_has_properties():
     assert case_identifier["example"]
     assert case_identifier["recipe"]
 
-    # TODO: This particular case_id may not always exist...
     case = court.get_case("addison_civil_104-8-20")
 
     assert case.events
